@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { LoginDTO, RegisterDTO } from './DTO/user.DTO.js';
+import { authMidd } from '../common/auth.guard.js';
 
 @Controller('auth')
 export class AuthController {
@@ -22,4 +23,12 @@ export class AuthController {
       const user = await this.authService.userLogin(login);
       return { msg: 'User logged in successfully' ,user};
     }
+
+    @Get('profile')
+    @UseGuards(authMidd)
+    async profile(@Request() req:unknown){
+      const user = await this.authService.usrProfile((req as any).user.id);
+      return user;
+    }
+
 }

@@ -51,9 +51,7 @@ export class AuthService {
 
     const payLoad = { id: isUser.id, email: isUser.email, role: isUser.role };
     const token = await this.jwtService.signAsync(payLoad);
-
-    const { passwordHash, ...userData } = isUser;
-
+    
     return { token };
   }
 
