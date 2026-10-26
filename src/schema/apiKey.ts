@@ -21,7 +21,7 @@ export class ApiKey{
         name: "tenantId",
         foreignKeyConstraintName: "FK_ApiKey_Tenant"
     })
-    tenantId: Tenant;
+    tenantId: string;
 
     @Column({default: true})
     isActive: boolean;

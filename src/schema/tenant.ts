@@ -2,7 +2,7 @@ import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, Pri
 import { User } from "./user.js";
 import { ApiKey } from "./apiKey.js";
 
-enum Plan {
+export enum Plan {
     FREE = "free",
     PRO = "pro",
     ENTERPRISE = "enterprise"
@@ -31,7 +31,10 @@ export class Tenant {
         name: "userId",
         foreignKeyConstraintName: "FK_Tenant_User"
     })
-    userId: User;
+    user:User;
+
+    @Column({name: "userId"})
+    userId: string;
 
     @OneToMany(()=> ApiKey, (apiKey)=> apiKey.tenantId)
     apiKeys: ApiKey[];
