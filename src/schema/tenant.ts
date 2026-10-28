@@ -39,6 +39,12 @@ export class Tenant {
     @OneToMany(()=> ApiKey, (apiKey)=> apiKey.tenantId)
     apiKeys: ApiKey[];
 
+    @Column({default: true})
+    isActive: boolean;
+
+    @Column({default: 1})
+    maxApiKey: number;
+
     @CreateDateColumn({type:'timestamptz'})
     createdAt: Date;
 }

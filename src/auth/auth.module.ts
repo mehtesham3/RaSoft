@@ -13,7 +13,7 @@ import { ApiKey } from '../schema/apiKey.js';
     JwtModule.register({
       global:true,
       secret: process.env.JWT_SECRET || 'PasswordIs123',
-      signOptions:{expiresIn:'1h'}
+      signOptions:{expiresIn:'24h'}
     })
 
   ],
