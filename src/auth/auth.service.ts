@@ -12,7 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Tenant } from '../schema/tenant.js';
 import { ApiKey } from '../schema/apiKey.js';
-import { createHash, randomBytes } from 'crypto';
+import { apikeyUtils } from '../common/apiKey.gen.js';
 
 @Injectable()
 export class AuthService {
@@ -22,17 +22,6 @@ export class AuthService {
     @InjectRepository(ApiKey) private apiKeyModel: Repository<ApiKey>,
     private jwtService: JwtService,
   ) {}
-
-  static generate(): {plainKey:string,keyHash:string,keyPrefix:unknown} {
-    const random = randomBytes(27).toString('hex')
-
-    const plainKey = `${process.env.DEFAULT_KEY_PREFIX}${random}`;
-    const keyHash = createHash('sha256').update(plainKey).digest('hex');
-
-    const keyPrefix = process.env.DEFAULT_KEY_PREFIX;  //plainKey.substring(0,12);
-
-    return {plainKey,keyHash,keyPrefix}
-  }
 
   async userSignIn(registerDTO: RegisterDTO): Promise<{ user: Object; apiKey: ApiKey; tenant: Tenant; plainKey:string; warning:string }> {
     const existingUser = await this.userModel.findOne({
@@ -50,7 +39,7 @@ export class AuthService {
 
     const nwUsr = await this.userModel.save(newUser); // Save the new user
 
-    const {keyHash,keyPrefix,plainKey} = AuthService.generate(); //api key generation
+    const {keyHsh,keyPrefix,plainKey} = apikeyUtils.generate(); //api key generation
 
     const tenan = this.tenantModel.create({ 
       name: registerDTO.tenantName ?? registerDTO.name,
@@ -61,7 +50,7 @@ export class AuthService {
       const apiKey = this.apiKeyModel.create({
         name: registerDTO.apiKeyName ?? 'Default API Key',
         keyPrefix:process.env.DEFAULT_KEY_PREFIX,
-        keyHash:keyHash,
+        keyHash:keyHsh,
         tenantId: ten.id
       });
 

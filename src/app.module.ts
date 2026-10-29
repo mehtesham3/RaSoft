@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TerminusModule } from '@nestjs/terminus';
 import { AuthModule } from './auth/auth.module.js';
 import { TenanModule } from './tenan/tenan.module.js';
+import { ApiKeysModule } from './api-keys/api-keys.module.js';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { TenanModule } from './tenan/tenan.module.js';
     TerminusModule,
     AuthModule,
     TenanModule,
+    ApiKeysModule,
   ],
   controllers: [AppController],
   providers: [AppService],
