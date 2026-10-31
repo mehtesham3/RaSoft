@@ -7,6 +7,13 @@ import {
   Index,
 } from 'typeorm';
 
+export enum UserRole {
+  ADMIN = 'admin',
+  OWNER = 'owner',
+  MEMBER = 'member'
+  // GUEST = 'guest'
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -20,10 +27,10 @@ export class User {
   email: string;
 
   @Column()
-  passwordHash: string; // camelCase here → snake_case column
+  passwordHash: string; 
 
-  @Column()
-  role: string; // e.g., 'admin', 'user', etc.
+  @Column({default: UserRole.OWNER})
+  role: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

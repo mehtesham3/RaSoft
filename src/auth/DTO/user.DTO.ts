@@ -19,15 +19,20 @@ export class RegisterDTO {
     @MaxLength(30)
     password:string;
 
-    @IsIn(['user', 'admin'])
+    @IsIn(['owner', 'admin', 'member', 'guest'])
     @IsString()
     @IsOptional()
     role:string;
-}
 
-enum Role {
-    USER = 'user',
-    ADMIN = 'admin'
+    @IsOptional()
+    @IsString()
+    @MaxLength(100)
+    apiKeyName:string;
+
+    @IsOptional()
+    @IsString()
+    @MaxLength(100)
+    tenantName:string;
 }
 
 export class LoginDTO {

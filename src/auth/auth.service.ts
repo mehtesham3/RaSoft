@@ -10,15 +10,20 @@ import { Repository } from 'typeorm';
 import { LoginDTO, RegisterDTO } from './DTO/user.DTO.js';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { Tenant } from '../schema/tenant.js';
+import { ApiKey } from '../schema/apiKey.js';
+import { apikeyUtils } from '../common/apiKey.gen.js';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User) private userModel: Repository<User>,
+    @InjectRepository(Tenant) private tenantModel: Repository<Tenant>,
+    @InjectRepository(ApiKey) private apiKeyModel: Repository<ApiKey>,
     private jwtService: JwtService,
   ) {}
 
-  async userSignIn(registerDTO: RegisterDTO): Promise<User> {
+  async userSignIn(registerDTO: RegisterDTO): Promise<{ user: Object; apiKey: ApiKey; tenant: Tenant; plainKey:string; warning:string }> {
     const existingUser = await this.userModel.findOne({
       where: { email: registerDTO.email },
     });
@@ -28,16 +33,39 @@ export class AuthService {
     const newUser = this.userModel.create({
       name: registerDTO.name,
       email: registerDTO.email,
-      role: registerDTO.role ?? 'user',
+      role: registerDTO.role ?? 'owner',
       passwordHash: hashPass,
     });
 
-    await this.userModel.save(newUser);
-    return newUser;
+    const nwUsr = await this.userModel.save(newUser); // Save the new user
+
+    const {keyHsh,keyPrefix,plainKey} = apikeyUtils.generate(); //api key generation
+
+    const tenan = this.tenantModel.create({ 
+      name: registerDTO.tenantName ?? registerDTO.name,
+        userId: nwUsr.id
+      })
+    const ten = await this.tenantModel.save(tenan);  // Save the new tenant
+
+      const apiKey = this.apiKeyModel.create({
+        name: registerDTO.apiKeyName ?? 'Default API Key',
+        keyPrefix:process.env.DEFAULT_KEY_PREFIX,
+        keyHash:keyHsh,
+        tenantId: ten.id
+      });
+
+      await this.apiKeyModel.save(apiKey);  // Save the new API key
+
+    const {passwordHash, ...userData} = nwUsr;
+
+    const dispResult = { user: userData, apiKey, tenant: ten, plainKey, warning: 'API key will be shown only once, please save it securely.' };
+
+    return dispResult;
   }
 
   async userLogin(loginDTO: LoginDTO) {
-    const isUser = await this.userModel.findOne({
+    try{
+      const isUser = await this.userModel.findOne({
       where: { email: loginDTO.email },
     });
     if (!isUser) throw new NotFoundException('Invalid Credentials ');
@@ -49,10 +77,18 @@ export class AuthService {
     if (!isPasswordValid)
       throw new UnauthorizedException('Invalid credentials');
 
-    const payLoad = { id: isUser.id, email: isUser.email, role: isUser.role };
+    // const tenant = await this.tenantModel.findOne({where:{userId:isUser.id}});
+    const tenant = await this.tenantModel.findOneBy({userId:isUser.id});
+    if(!tenant) throw new NotFoundException('Tenant not found for the user');
+    const payLoad = { usrId: isUser.id, email: isUser.email, role: isUser.role, tenantId: tenant.id};
     const token = await this.jwtService.signAsync(payLoad);
-    
+
     return { token };
+  } catch (error) {
+ 
+    console.error(error);
+    return `Error occur due to ${error}`;
+  }
   }
 
   async usrProfile(userId:string) {
