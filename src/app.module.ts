@@ -7,6 +7,7 @@ import { TerminusModule } from '@nestjs/terminus';
 import { AuthModule } from './auth/auth.module.js';
 import { TenanModule } from './tenan/tenan.module.js';
 import { ApiKeysModule } from './api-keys/api-keys.module.js';
+import { DocsModule } from './docs/docs.module.js';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ApiKeysModule } from './api-keys/api-keys.module.js';
     AuthModule,
     TenanModule,
     ApiKeysModule,
+    DocsModule
   ],
   controllers: [AppController],
   providers: [AppService],

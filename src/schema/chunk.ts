@@ -11,16 +11,16 @@ export class Chunk {
   @Column()
   Chunk: string;
 
-    @Column({ name: 'document_id' })
-  documentId: number;
+  @Column({ name: 'document_id' })
+  documentId: string;
 
 //   @ManyToOne(() => Document, (document) => document.chunks, { onDelete: 'CASCADE' })
   @ManyToOne(() => Document, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'document_id' })
   document: Document;
 
-    @Column({ name: 'tenant_id' })
-  tenantId: number;
+  @Column({ name: 'tenant_id' })
+  tenantId: string;
 
   @ManyToOne(() => Tenant, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'tenant_id' })

@@ -36,19 +36,22 @@ export class Document {
   status: DocumentStatus;
 
   @Column()
-  pages: number;
+  fileSizeBytes: number;
 
-  @Column()
+  @Column({default: 0})
   chunkCount: number;
 
-  // Inside your existing Document entity class:
-@OneToMany(() => Chunk, (chunk) => chunk.document)
-chunks: Chunk[];
-
   @Column()
+  mimeType: string;
+
+  // Inside your existing Document entity class:
+// @OneToMany(() => Chunk, (chunk) => chunk.document)
+// chunks: Chunk[];
+
+  @Column({default: () => 'CURRENT_TIMESTAMP'})
   createdAt: Date;
 
-  @Column()
+  @Column({default: () => 'CURRENT_TIMESTAMP'})
   updatedAt: Date;
   
 }
