@@ -4,9 +4,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { authMidd } from '../common/auth.guard.js';
+import { ApiKeyGuard } from '../common/apiKey.guard.js';
 
 @Controller('docs')
-@UseGuards(authMidd)
+@UseGuards(authMidd,ApiKeyGuard)
 export class DocsController {
   constructor(private readonly docsService: DocsService) {}
 
@@ -34,15 +35,17 @@ export class DocsController {
       }),
     )
     file: Express.Multer.File,
-    @Req() req: Request & {user:any}
+    @Req() req: Request & {user:any, apiKey:string}
 ){
   console.log('--- DEBUG FILE UPLOAD ---');
   console.log('File Object:', file);
   const tenantId = req.user.tenantId;
-    if (!tenantId) {
+  const apiKey = req.apiKey;
+
+  if (!tenantId) {
     throw new BadRequestException('Authenticated user payload does not contain a tenant ID');
   }
   
-  return this.docsService.uploadDocs(file,tenantId);
+  return this.docsService.uploadDocs(file,tenantId,apiKey);
 }  
 }
