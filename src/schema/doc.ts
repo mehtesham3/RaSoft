@@ -41,8 +41,14 @@ export class Document {
   @Column({default: 0})
   chunkCount: number;
 
+  @Column({default: 0})
+  tokenCount: number;
+
   @Column()
   mimeType: string;
+
+  @Column({type:'jsonb', nullable: true})
+  metadata: Record<string, any>;
 
   // Inside your existing Document entity class:
 // @OneToMany(() => Chunk, (chunk) => chunk.document)

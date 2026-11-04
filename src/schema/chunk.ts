@@ -29,15 +29,12 @@ export class Chunk {
   @Column("vector",{name:"embedding",nullable:true,length: 1536})
   embedding: number[];
 
-  @Column("jsonb",{name:"metadata",nullable:true})
-  metadata: any;
+  // @Column("jsonb",{name:"metadata",nullable:true})
+  // metadata: any;
 
-  @Column()
-  tokenCount: number;
-
-  @Column()
+  @Column({default: () => 'CURRENT_TIMESTAMP'})
   createdAt: Date;
 
-  @Column()
+  @Column({default: () => 'CURRENT_TIMESTAMP'})
   updatedAt: Date;
 }
