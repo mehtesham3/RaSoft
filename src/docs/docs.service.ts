@@ -26,23 +26,23 @@ export class DocsService {
     return true;
   }
 
-  async uploadDocs(file: Express.Multer.File, tenanId: any) {
-      const fileMetadata = {
-      originalName: file.originalname,
-      generatedName: file.filename,
-      mimeType: file.mimetype,
-      sizeInBytes: file.size,
-      localPath: file.path,
-      uploadedAt: new Date(),
-    };
+  async uploadDocs(file: any, tenanId: any) {
+    //   const fileMetadata = {
+    //   originalName: file.originalname,
+    //   generatedName: file.filename,
+    //   mimeType: file.mimetype,
+    //   sizeInBytes: file.size,
+    //   localPath: file.path,
+    //   uploadedAt: new Date(),
+    // };
     const startTime = new Date();
 
     const newDoc = this.docsModule.create({
-      name: fileMetadata.originalName,
-      location: fileMetadata.localPath,
+      name: file.originalName,
+      location: file.localPath,
       tenantId: tenanId,
-      mimeType: fileMetadata.mimeType,
-      fileSizeBytes: fileMetadata.sizeInBytes,
+      mimeType: file.mimeType,
+      fileSizeBytes: file.size,
     });
 
     const savedDoc = await this.docsModule.save(newDoc);
@@ -50,7 +50,7 @@ export class DocsService {
     // Extract text from the uploaded document
     const extractTxt = await this.fileProcess.extractText(savedDoc.location);
     // Split the extracted text into chunks
-    const chunks = await this.fileProcess.splitText(extractTxt,900,100);
+    const chunks = await this.fileProcess.splitText(extractTxt,600,100);
     // Generate embeddings for the chunks
     const embedAndSave = await this.fileProcess.genEmbedding(chunks,savedDoc.id,tenanId);
 
@@ -58,7 +58,11 @@ export class DocsService {
 
     newDoc.chunkCount = chunkCount;
     const tokenCount = chunks.reduce((count, chunk) => count + chunk.split(' ').length, 0);
-
+    if (!embedAndSave || tokenCount === 0) {
+      newDoc.status = DocumentStatus.FAILED;
+      await this.docsModule.save(newDoc);
+      throw new Error('Document processing failed');
+    }
     newDoc.tokenCount = tokenCount;
     newDoc.status = DocumentStatus.COMPLETED;
     await this.docsModule.save(newDoc);

@@ -6,10 +6,16 @@ import { Document } from '../schema/doc.js';
 import { Chunk } from '../schema/chunk.js';
 import { ApiKey } from '../schema/apiKey.js';
 import { FileProcessService } from './file.process.js';
+import { BullModule } from '@nestjs/bullmq';
+import { INGESTION_QUEUE } from './inject.constant.js';
+import { DocProcessWorker } from './docProcess.worker.js';
 
 @Module({
-  imports:[TypeOrmModule.forFeature([Document,Chunk,ApiKey])],
+  imports:[TypeOrmModule.forFeature([Document,Chunk,ApiKey]),
+  BullModule.registerQueue({
+    name: INGESTION_QUEUE,
+  })],
   controllers: [DocsController],
-  providers: [DocsService,FileProcessService],
+  providers: [DocsService, FileProcessService, DocProcessWorker],
 })
 export class DocsModule {}
