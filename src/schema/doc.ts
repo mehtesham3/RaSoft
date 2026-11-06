@@ -21,7 +21,7 @@ export class Document {
     location: string;
 
     @Column({ name: 'tenant_id' })
-  tenantId: number;
+  tenantId: string;
 
   // 2. Define the TypeORM relation
   @ManyToOne(() => Tenant, { onDelete: 'CASCADE' })

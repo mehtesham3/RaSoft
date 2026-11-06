@@ -1,9 +1,13 @@
 import {
   BadRequestException,
   Controller,
+  Delete,
   FileTypeValidator,
   Get,
+  HttpException,
+  InternalServerErrorException,
   MaxFileSizeValidator,
+  Param,
   ParseFilePipe,
   Post,
   Req,
@@ -24,14 +28,15 @@ import { Queue } from 'bullmq';
 import { INGESTION_QUEUE, PROCESS_DOC } from './inject.constant.js';
 
 @Controller('docs')
-@UseGuards(authMidd, ApiKeyGuard)
+@UseGuards(authMidd)
 export class DocsController {
   constructor(
     private readonly docsService: DocsService,
     private readonly test: FileProcessService,
-    @InjectQueue(INGESTION_QUEUE) private readonly docQ: Queue
+    @InjectQueue(INGESTION_QUEUE) private readonly docQ: Queue,
   ) {}
 
+  @UseGuards(ApiKeyGuard)
   @Post('upload')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -69,30 +74,36 @@ export class DocsController {
         'Authenticated user payload does not contain a tenant ID',
       );
     }
+try {
+    // const respData = await this.docsService.uploadDocs(file,tenantId)
 
-    const docJob = await this.docQ.add(PROCESS_DOC,{
+    const docJob = await this.docQ.add(PROCESS_DOC, {
       file: {
         originalName: file.originalname,
-        localPath: file.path,
-        mimeType: file.mimetype,
-        size: file.size
+        path: file.path,
+        mimetype: file.mimetype,
+        size: file.size,
       },
-      tenantId: tenantId
-    })
+      tenantId: tenantId,
+    });
 
     const respData = {
       jobId: docJob.id,
-      msg: 'Job created successfully'
-    }
+      msg: 'Job created successfully',
+    };
 
     return respData;
 
     // return this.docsService.uploadDocs(file, tenantId);
+  }catch(error){
+    if (error instanceof HttpException) throw error;
+    console.log('Error in uploadDocs:', error);
+      throw new InternalServerErrorException('Failed to process document '+error);
+    }
   }
 
-
   @Public()
-  @Post('extract')
+  //@Post('extract')
   // @UseInterceptors(FileInterceptor('file', { dest: './uploads' }))
   async uploadFile() {
     // 1. File is already saved to local folder via Multer ({ dest: './uploads' })
@@ -116,5 +127,105 @@ export class DocsController {
       chunkPreview: chunks.slice(0, 3),
       embed: embedContent,
     };
+  }
+
+  @Get()
+  async getDocs(@Req() req: Request & { user: any }) {
+    try {
+      const tenantId = req.user.tenantId;
+
+      if (!tenantId) {
+        throw new BadRequestException(
+          'Authenticated user payload does not contain a tenant ID',
+        );
+      }
+
+      const docs = await this.docsService.getAllDocs(tenantId);
+      return {
+        message: 'Documents retrieved successfully',
+        data: docs,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new InternalServerErrorException('Failed to retrieve document');
+    }
+  }
+
+  @Get('/:id')
+  async getDocById(
+    @Req() req: Request & { user: any },
+    @Param('id') docId: string,
+  ) {
+    try {
+      const tenantId = req.user.tenantId;
+
+      if (!tenantId) {
+        throw new BadRequestException(
+          'Authenticated user payload does not contain a tenant ID',
+        );
+      }
+
+      const doc = await this.docsService.getDocById(tenantId, docId);
+      return {
+        message: 'Document retrieved successfully',
+        data: doc,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new InternalServerErrorException('Failed to retrieve document');
+    }
+  }
+
+  @Delete('/:id')
+  async deleteDocById(
+    @Req() req: Request & { user: any },
+    @Param('id') docId: string,
+  ) {
+    try {
+      const tenantId = req.user.tenantId;
+
+      if (!tenantId) {
+        throw new BadRequestException(
+          'Authenticated user payload does not contain a tenant ID',
+        );
+      }
+
+      const result = await this.docsService.deleteDocById(tenantId, docId);
+      return {
+        message: 'Document deleted successfully',
+        data: result,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new InternalServerErrorException('Failed to delete document');
+    }
+  }
+
+  @Post('/:id/reprocess')
+  async reprocessDoc(
+    @Req() req: Request & { user: any },
+    @Param('id') docId: string,
+  ) {
+    try {
+      const tenantId = req.user.tenantId;
+
+      if (!tenantId) {
+        throw new BadRequestException(
+          'Authenticated user payload does not contain a tenant ID',
+        );
+      }
+
+      const result = await this.docsService.retryFailedIngestion(
+        tenantId,
+        docId,
+      );
+      return {
+        message: 'Document reprocessing initiated successfully',
+        data: result,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new InternalServerErrorException('Failed to reprocess document due to ' + error);
+    }
   }
 }
