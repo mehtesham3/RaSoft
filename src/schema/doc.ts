@@ -21,7 +21,7 @@ export class Document {
     location: string;
 
     @Column({ name: 'tenant_id' })
-  tenantId: number;
+  tenantId: string;
 
   // 2. Define the TypeORM relation
   @ManyToOne(() => Tenant, { onDelete: 'CASCADE' })
@@ -36,19 +36,28 @@ export class Document {
   status: DocumentStatus;
 
   @Column()
-  pages: number;
+  fileSizeBytes: number;
 
-  @Column()
+  @Column({default: 0})
   chunkCount: number;
 
-  // Inside your existing Document entity class:
-@OneToMany(() => Chunk, (chunk) => chunk.document)
-chunks: Chunk[];
+  @Column({default: 0})
+  tokenCount: number;
 
   @Column()
+  mimeType: string;
+
+  @Column({type:'jsonb', nullable: true})
+  metadata: Record<string, any>;
+
+  // Inside your existing Document entity class:
+// @OneToMany(() => Chunk, (chunk) => chunk.document)
+// chunks: Chunk[];
+
+  @Column({default: () => 'CURRENT_TIMESTAMP'})
   createdAt: Date;
 
-  @Column()
+  @Column({default: () => 'CURRENT_TIMESTAMP'})
   updatedAt: Date;
   
 }

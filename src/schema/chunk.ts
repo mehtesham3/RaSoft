@@ -11,16 +11,16 @@ export class Chunk {
   @Column()
   Chunk: string;
 
-    @Column({ name: 'document_id' })
-  documentId: number;
+  @Column({ name: 'document_id' })
+  documentId: string;
 
 //   @ManyToOne(() => Document, (document) => document.chunks, { onDelete: 'CASCADE' })
   @ManyToOne(() => Document, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'document_id' })
   document: Document;
 
-    @Column({ name: 'tenant_id' })
-  tenantId: number;
+  @Column({ name: 'tenant_id' })
+  tenantId: string;
 
   @ManyToOne(() => Tenant, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'tenant_id' })
@@ -29,15 +29,12 @@ export class Chunk {
   @Column("vector",{name:"embedding",nullable:true,length: 1536})
   embedding: number[];
 
-  @Column("jsonb",{name:"metadata",nullable:true})
-  metadata: any;
+  // @Column("jsonb",{name:"metadata",nullable:true})
+  // metadata: any;
 
-  @Column()
-  tokenCount: number;
-
-  @Column()
+  @Column({default: () => 'CURRENT_TIMESTAMP'})
   createdAt: Date;
 
-  @Column()
+  @Column({default: () => 'CURRENT_TIMESTAMP'})
   updatedAt: Date;
 }

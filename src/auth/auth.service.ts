@@ -1,6 +1,8 @@
 import {
   ConflictException,
+  HttpException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -85,9 +87,8 @@ export class AuthService {
 
     return { token };
   } catch (error) {
- 
-    console.error(error);
-    return `Error occur due to ${error}`;
+    if (error instanceof HttpException) throw error;
+    throw new InternalServerErrorException('Login failed');
   }
   }
 
